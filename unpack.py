@@ -1,12 +1,12 @@
 from __future__ import absolute_import
 import argparse
 import logging
-
-
+import cloudstorage
 import apache_beam as beam
 from apache_beam.io.filesystem import FileSystem
 from apache_beam.io.gcp.gcsfilesystem import GCSFileSystem
 from apache_beam.options.pipeline_options import PipelineOptions
+
 # from google.cloud import vision
 # from google.cloud.vision import types
 
@@ -53,7 +53,39 @@ class ImageLabeler(beam.DoFn):
             row: A list containing a dictionary defining a record to be written to BigQuery
         """
         print(element)
+        # print(element[0].path)
+        # file_path = element[0].path
         logging.info(repr(element))
+
+        # try:
+        #     with cloudstorage.open(filename) as cloudstorage_file:
+        #         outfile = image_path
+        #         success_output_path = 'https://storage.googleapis.com' + image_path
+        #         try:
+        #             img = images.Image(cloudstorage_file.read())
+        #             img.im_feeling_lucky()
+        #             result = img.execute_transforms(output_encoding=images.PNG)
+        #             logging.info('converting file {}\n'.format(filename))
+        #
+        #             # The retry_params specified in the open call will override the default
+        #             # retry params for this particular file handle.
+        #             write_retry_params = cloudstorage.RetryParams(backoff_factor=1.1)
+        #             with cloudstorage.open(
+        #                     outfile, 'w', content_type='image/png',
+        #                     retry_params=write_retry_params) as cloudstorage_file:
+        #
+        #                 cloudstorage_file.write(result)
+        #                 cloudstorage_file.close()
+        #                 self.success_files.append(success_output_path)
+        #                 self.tmp_filenames_to_clean_up.append(filename)
+        #         except IOError:
+        #             logging.error("cannot convert", filename)
+        #             self.copy_file(filename, image_path)
+        #         except Exception as e:
+        #             logging.error("error is", e)
+        #             self.copy_file(filename, image_path)
+        # except cloudstorage.NotFoundError as e:
+        #     logging.error('file not found NotFoundError for :{}'.format(filename), e)
 
         return 'done'
 
@@ -61,7 +93,9 @@ class ImageLabeler(beam.DoFn):
 def run():
     p = beam.Pipeline(options=PipelineOptions())
     gcs = GCSFileSystem(PipelineOptions())
-    input_pattern = ['gs://dataflow-buffer/parent-unpack/2018/i20180130/PxpFJwJabD-untarI20180130/DESIGN/USD0808610-20180130.ZIP']
+    # 'gs://dataflow-buffer/parent-unpack/2018/i20180130/PxpFJwJabD-untarI20180130/DESIGN/USD0808610-20180130.ZIP'
+    input_pattern = [
+        'gs://dataflow-buffer/parent-unpack/2018/i20180130/PxpFJwJabD-untarI20180130/DESIGN/*.ZIP']
 
     result = [m.metadata_list for m in gcs.match(input_pattern)]
     (p

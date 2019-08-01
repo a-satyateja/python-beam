@@ -6,8 +6,8 @@ import logging
 import apache_beam as beam
 from apache_beam.io.filesystem import FileSystem
 from apache_beam.options.pipeline_options import PipelineOptions
-from google.cloud import vision
-from google.cloud.vision import types
+# from google.cloud import vision
+# from google.cloud.vision import types
 
 # Specify default parameters.
 INPUT_FILE = 'gs://python-dataflow-example/data_files/image-list.txt'
@@ -15,26 +15,26 @@ BQ_DATASET = 'ImageLabelFlow'
 BQ_TABLE = BQ_DATASET + '.dogs_short'
 
 
-def detect_labels_uri(uri):
-    """This Function detects labels in the image file located in Google Cloud Storage or on
-    theWeb and returns a comma separated list of labels. This will return an empty string
-    if not passed a valid image file
-    Args:
-        uri: a string link to a photo in gcs or on the web
-    (Adapted From:
-    https://github.com/GoogleCloudPlatform/python-docs-samples/blob/master/vision/cloud-client/detect/detect.py)
-    """
-    # Initialize cloud vision api client and image object.
-    client = vision.ImageAnnotatorClient()
-    image = types.Image()
-    image.source.image_uri = uri
-
-    # Send an api call for this image, extract label descriptions
-    # and return a comma-space separated string.
-    response = client.label_detection(image=image)
-    labels = response.label_annotations
-    label_list = [l.description for l in labels]
-    return ', '.join(label_list)
+# def detect_labels_uri(uri):
+#     """This Function detects labels in the image file located in Google Cloud Storage or on
+#     theWeb and returns a comma separated list of labels. This will return an empty string
+#     if not passed a valid image file
+#     Args:
+#         uri: a string link to a photo in gcs or on the web
+#     (Adapted From:
+#     https://github.com/GoogleCloudPlatform/python-docs-samples/blob/master/vision/cloud-client/detect/detect.py)
+#     """
+#     # Initialize cloud vision api client and image object.
+#     client = vision.ImageAnnotatorClient()
+#     image = types.Image()
+#     image.source.image_uri = uri
+#
+#     # Send an api call for this image, extract label descriptions
+#     # and return a comma-space separated string.
+#     response = client.label_detection(image=image)
+#     labels = response.label_annotations
+#     label_list = [l.description for l in labels]
+#     return ', '.join(label_list)
 
 
 class ImageLabeler(beam.DoFn):
@@ -51,16 +51,17 @@ class ImageLabeler(beam.DoFn):
         Returns:
             row: A list containing a dictionary defining a record to be written to BigQuery
         """
-        labels_string = detect_labels_uri(element)
+        print(element)
+        logging.info(repr(element))
 
-        return [{'image_location': element, 'labels': labels_string}]
+        return 'done'
 
 
 def run():
     p = beam.Pipeline(options=PipelineOptions())
-    input_pattern = 'abc'
+    input_pattern = ['gs://dataflow-buffer/parent-unpack/2018/i20180130/PxpFJwJabD-untarI20180130/DESIGN/USD0808610-20180130.ZIP']
     (p
-     | 'Read from a File' >> FileSystem.match()
+     | 'Read from a File' >> FileSystem.match(input_pattern)
      | 'Vision API label_annotation wrapper' >> beam.ParDo(ImageLabeler())
      )
     p.run().wait_until_finish()

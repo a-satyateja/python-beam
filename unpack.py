@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 import argparse
 import logging
-import cloudstorage
+# import cloudstorage
 import apache_beam as beam
 from apache_beam.io.filesystem import FileSystem
 from apache_beam.io.gcp.gcsfilesystem import GCSFileSystem

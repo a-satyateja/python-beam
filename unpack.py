@@ -61,12 +61,12 @@ class ImageLabeler(beam.DoFn):
 def run():
     p = beam.Pipeline(options=PipelineOptions())
     gcs = GCSFileSystem(PipelineOptions())
-
     input_pattern = ['gs://dataflow-buffer/parent-unpack/2018/i20180130/PxpFJwJabD-untarI20180130/DESIGN/USD0808610-20180130.ZIP']
 
+    result = [m.metadata_list for m in gcs.match(input_pattern)]
     (p
-     | 'Read from a File' >> gcs.match(input_pattern)
-     | 'Vision API label_annotation wrapper' >> beam.ParDo(ImageLabeler())
+     | 'Read from a File' >> beam.Create(result)
+     | 'Print read file' >> beam.ParDo(ImageLabeler())
      )
     p.run().wait_until_finish()
 

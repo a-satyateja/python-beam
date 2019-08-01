@@ -5,6 +5,7 @@ import logging
 
 import apache_beam as beam
 from apache_beam.io.filesystem import FileSystem
+from apache_beam.io.gcp.gcsfilesystem import GCSFileSystem
 from apache_beam.options.pipeline_options import PipelineOptions
 # from google.cloud import vision
 # from google.cloud.vision import types
@@ -59,9 +60,12 @@ class ImageLabeler(beam.DoFn):
 
 def run():
     p = beam.Pipeline(options=PipelineOptions())
+    gcs = GCSFileSystem(PipelineOptions())
+
     input_pattern = ['gs://dataflow-buffer/parent-unpack/2018/i20180130/PxpFJwJabD-untarI20180130/DESIGN/USD0808610-20180130.ZIP']
+
     (p
-     | 'Read from a File' >> FileSystem.match(input_pattern)
+     | 'Read from a File' >> gcs.match(input_pattern)
      | 'Vision API label_annotation wrapper' >> beam.ParDo(ImageLabeler())
      )
     p.run().wait_until_finish()

@@ -93,7 +93,6 @@ def run():
     result = [m.metadata_list for m in gcs.match(input_pattern)]
     (p
      | 'Read from a File' >> beam.Create(result)
-     | 'Shuffle' >> beam.Reshuffle()
      | 'Print read file' >> beam.ParDo(ImageLabeler())
      )
     p.run().wait_until_finish()

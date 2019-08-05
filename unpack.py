@@ -1,12 +1,10 @@
 from __future__ import absolute_import
 # import argparse
 import logging
-import zipfile
 import apache_beam as beam
-# from google import auth
-from apache_beam.io.gcp import gcsio
 from apache_beam.io.gcp.gcsfilesystem import GCSFileSystem
 from apache_beam.options.pipeline_options import PipelineOptions
+
 
 # from google.cloud import vision
 # from google.cloud.vision import types
@@ -43,6 +41,8 @@ class ImageLabeler(beam.DoFn):
     """
 
     def process(self, element, *args, **kwargs):
+        from apache_beam.io.gcp import gcsio
+        import zipfile
         """
         Args:
             element: A string specifying the uri of an image
@@ -54,7 +54,7 @@ class ImageLabeler(beam.DoFn):
         # file_path = element[0].path
         logging.info(repr(element))
         for el in element:
-            with beam.io.gcp.gcsio.GcsIO().open(el.path, 'r') as f:
+            with gcsio.GcsIO().open(el.path, 'r') as f:
                 if zipfile.is_zipfile(f):
                     logging.info('it is a zip file')
                     z = zipfile.ZipFile(f)
@@ -63,6 +63,7 @@ class ImageLabeler(beam.DoFn):
                     for some_file in file_list:
                         if '.TIF' in some_file.filename:
                             print some_file.filename
+                            logging.info('zip file is : ', some_file.filename)
                             try:
                                 data = z.read(some_file)
                             except KeyError:
@@ -70,8 +71,8 @@ class ImageLabeler(beam.DoFn):
                             else:
                                 print some_file.filename, ':'
                                 outfile = 'gs://dataflow-buffer/python-1/' + some_file.filename
-                                with beam.io.gcp.gcsio.GcsIO().open(outfile, mode='w',
-                                                                    mime_type='image/tiff') as writing_path:
+                                with gcsio.GcsIO().open(outfile, mode='w',
+                                                        mime_type='image/tiff') as writing_path:
                                     writing_path.write(data)
                                     writing_path.close()
                                     print 'write success'
@@ -91,53 +92,6 @@ def run():
      | 'Print read file' >> beam.ParDo(ImageLabeler())
      )
     p.run().wait_until_finish()
-
-
-# def get_service_credentials():
-#     """For internal use only; no backwards-compatibility guarantees.
-#
-#     Get credentials to access Google services.
-#
-#     Returns:
-#       A ``google.auth.credentials.Credentials`` object or None if credentials not
-#       found. Returned object is thread-safe.
-#     """
-#     return _Credentials.get_service_credentials()
-#
-#
-# class _Credentials(object):
-#     _credentials_lock = beam.threading.Lock()
-#     _credentials_init = False
-#     _credentials = None
-#
-#     @classmethod
-#     def get_service_credentials(cls):
-#         if cls._credentials_init:
-#             return cls._credentials
-#
-#         client_scopes = [
-#             'https://www.googleapis.com/auth/bigquery',
-#             'https://www.googleapis.com/auth/cloud-platform',
-#             'https://www.googleapis.com/auth/devstorage.full_control',
-#             'https://www.googleapis.com/auth/userinfo.email',
-#             'https://www.googleapis.com/auth/datastore'
-#         ]
-#         try:
-#             with cls._credentials_lock:
-#                 if cls._credentials_init:
-#                     return cls._credentials
-#                 cls._credentials, project_id = auth.default(client_scopes)
-#                 # if is_running_in_gce:
-#                 #     assert project_id == executing_project
-#                 cls._credentials_init = True
-#                 # TODO: remove?
-#                 logging.info('Got credentials %r for project: %s', cls._credentials, project_id)
-#         except auth.exceptions.DefaultCredentialsError as e:
-#             logging.warning(
-#                 'Unable to find default credentials to use: %s\n'
-#                 'Connecting anonymously.', e)
-#             return None
-#         return cls._credentials
 
 
 if __name__ == '__main__':

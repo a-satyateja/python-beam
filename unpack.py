@@ -2,7 +2,6 @@ from __future__ import absolute_import
 import argparse
 import logging
 import zipfile
-import cloudstorage
 import apache_beam as beam
 from apache_beam.io.gcp import gcsio
 from apache_beam.io.gcp.gcsfilesystem import GCSFileSystem
@@ -60,12 +59,6 @@ class ImageLabeler(beam.DoFn):
         for el in element:
             read_file(el.path)
         return 'done'
-
-
-cloudstorage.set_default_retry_params(
-    cloudstorage.RetryParams(
-        initial_delay=0.2, max_delay=5.0, backoff_factor=2, max_retry_period=15
-    ))
 
 
 def read_file(path):

@@ -30,7 +30,7 @@ class ImageExtract(beam.DoFn):
                             logging.info('ERROR: Did not find %s in zip file' % some_file.filename)
                         else:
                             logging.info('zip file is : %s', some_file.filename)
-                            outfile = 'gs://dataflow-buffer/python-3/' + some_file.filename
+                            outfile = 'gs://dataflow-buffer/python-4/' + some_file.filename
                             with gcsio.GcsIO().open(outfile, mode='w',
                                                     mime_type='image/tiff') as writing_path:
                                 writing_path.write(data)

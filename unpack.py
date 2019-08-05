@@ -71,16 +71,16 @@ def read_file(path):
             for some_file in file_list:
                 if '.TIF' in some_file.filename:
                     print some_file.filename
-                    # try:
-                    #     data = z.read(some_file)
-                    # except KeyError:
-                    #     print 'ERROR: Did not find %s in zip file' % some_file
-                    # else:
-                    #     print some_file.filename, ':'
-                    #     outfile = 'gs://dataflow-buffer/python-1/' + some_file.filename
-                    #     with beam.io.gcp.gcsio.GcsIO().open(outfile, mode='w', mime_type='image/tiff') as writing_path:
-                    #         writing_path.write(data)
-                    #         writing_path.close()
+                    try:
+                        data = z.read(some_file)
+                    except KeyError:
+                        print 'ERROR: Did not find %s in zip file' % some_file
+                    else:
+                        print some_file.filename, ':'
+                        outfile = 'gs://dataflow-buffer/python-1/' + some_file.filename
+                        with beam.io.gcp.gcsio.GcsIO().open(outfile, mode='w', mime_type='image/tiff') as writing_path:
+                            writing_path.write(data)
+                            writing_path.close()
 
 
 def run():
